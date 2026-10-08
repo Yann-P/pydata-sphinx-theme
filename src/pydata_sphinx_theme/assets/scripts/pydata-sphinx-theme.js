@@ -843,9 +843,6 @@ function setupMobileSidebarKeyboardHandlers() {
       event.preventDefault();
       event.stopPropagation();
 
-      // Save focus so we can restore it when the dialog closes
-      const previouslyFocused = document.activeElement;
-
       // When we open the dialog, we cut and paste the nodes and classes from
       // the widescreen sidebar into the dialog
       cutAndPasteNodesAndClasses(sidebar, dialog);
@@ -858,16 +855,7 @@ function setupMobileSidebarKeyboardHandlers() {
       // tabindex="-1" for this): Tab still reaches that first control.
       dialog.focus();
 
-      // Restore focus when dialog closes
-      dialog.addEventListener(
-        "close",
-        () => {
-          if (previouslyFocused && previouslyFocused.focus) {
-            previouslyFocused.focus();
-          }
-        },
-        { once: true },
-      );
+      toggleButton.setAttribute("aria-expanded", "true");
     });
 
     // Listen for clicks on the backdrop in order to close the dialog
@@ -884,9 +872,35 @@ function setupMobileSidebarKeyboardHandlers() {
       }
     });
 
+    // Once the window is wide enough for the sidebar to be a column, the
+    // stylesheet hides the toggle, and an open drawer has nothing left to
+    // show, so close it. Hiding the toggle changes its size, so this runs when
+    // the breakpoint is crossed, not on every resize. The reader did not press
+    // anything, so skip the slide-out: cancel the animations the close
+    // starts, backdrop included.
+    new ResizeObserver(() => {
+      if (dialog.open && getComputedStyle(toggleButton).display === "none") {
+        dialog.close();
+        dialog.getAnimations({ subtree: true }).forEach((a) => a.cancel());
+      }
+    }).observe(toggleButton);
+
     // When the dialog is closed, move the nodes (and classes) back to their
-    // original place
-    dialog.addEventListener("close", () => {
+    // original place. Wait for the slide-out (and the backdrop's fade, which
+    // `subtree` includes) to finish first, or the drawer would empty
+    // mid-slide.
+    dialog.addEventListener("close", async () => {
+      toggleButton.setAttribute("aria-expanded", "false");
+
+      await Promise.allSettled(
+        dialog.getAnimations({ subtree: true }).map((a) => a.finished),
+      );
+
+      // Opened again while we waited: the content belongs in the dialog now.
+      if (dialog.open) {
+        return;
+      }
+
       cutAndPasteNodesAndClasses(dialog, sidebar);
     });
   });
