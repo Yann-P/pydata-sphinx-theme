@@ -8,8 +8,8 @@
   flex-shrink: 0;
   flex-direction: column;
   position: sticky;
-  top: var(--pst-header-height);
-  max-height: calc(100vh - var(--pst-header-height));
+  top: $header-height-total;
+  max-height: calc(100vh - #{$header-height-total});
 
   // As a flex item the sidebar would stretch to the full height of the row,
   // leaving its sticky box no room to settle. Sized to its own content
