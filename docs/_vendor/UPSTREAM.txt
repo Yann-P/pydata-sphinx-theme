@@ -1,0 +1,4 @@
+Temporary patched copy of jupyter-sphinx, for trying out the jupyter_sphinx_widget_scripts option.
+Base: https://github.com/jupyter/jupyter-sphinx at commit bd4c85d (main, 2026-09-29), plus the local change
+that adds jupyter_sphinx_widget_scripts = "always" | "auto" | "never". Not an upstream release.
+Delete this folder and the sys.path line in docs/conf.py to go back to the PyPI package.

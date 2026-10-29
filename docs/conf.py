@@ -19,6 +19,8 @@ import pydata_sphinx_theme
 
 
 sys.path.append(str(Path(".").resolve()))
+# Temporary patched copy of jupyter_sphinx, see docs/_vendor/UPSTREAM.txt
+sys.path.insert(0, str(Path(__file__).parent.resolve() / "_vendor"))
 
 # -- Project information -----------------------------------------------------
 
@@ -65,7 +67,11 @@ templates_path = ["_templates"]
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "**.ipynb_checkpoints"]
+exclude_patterns = ["_build", "_vendor", "Thumbs.db", ".DS_Store", "**.ipynb_checkpoints"]
+
+# Only load the widget scripts (require.js + ipywidgets embed bundle, ~3 MB)
+# on pages that contain widgets. Needs the patched jupyter_sphinx in docs/_vendor.
+jupyter_sphinx_widget_scripts = "auto"
 
 intersphinx_mapping = {
     "sphinx": ("https://www.sphinx-doc.org/en/master", None),
