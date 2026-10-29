@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from docutils import nodes
 from sphinx.application import Sphinx
 from sphinx.locale import _
 
@@ -76,6 +77,7 @@ jupyter_sphinx_widget_scripts = "auto"
 # nbsphinx does the same: as soon as one notebook has widgets, it adds require.js
 # and the same embed bundle to *every* page. Disable that and add them back, per
 # page, only on the notebooks that contain widgets (see add_notebook_widget_scripts).
+# Note: do a clean build (rm -rf docs/_build) when trying this, stale pages keep the old tags.
 nbsphinx_requirejs_path = ""
 nbsphinx_widgets_path = ""
 
@@ -374,8 +376,12 @@ def add_notebook_widget_scripts(
     """Load the widget scripts only on the notebook pages that contain widgets.
 
     ``add_js_file`` called from ``html-page-context`` only affects the page being written.
+    nbsphinx writes the widget state of a notebook into a raw html node, so the doctree
+    tells us which pages have widgets (``env.nbsphinx_widgets`` is empty on incremental
+    builds that don't re-read the notebook).
     """
-    if pagename not in app.env.nbsphinx_widgets:
+    state = "application/vnd.jupyter.widget-state+json"
+    if doctree is None or not any(state in node.astext() for node in doctree.findall(nodes.raw)):
         return
     from ipywidgets.embed import DEFAULT_EMBED_REQUIREJS_URL
 
