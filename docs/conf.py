@@ -73,6 +73,12 @@ exclude_patterns = ["_build", "_vendor", "Thumbs.db", ".DS_Store", "**.ipynb_che
 # on pages that contain widgets. Needs the patched jupyter_sphinx in docs/_vendor.
 jupyter_sphinx_widget_scripts = "auto"
 
+# nbsphinx does the same: as soon as one notebook has widgets, it adds require.js
+# and the same embed bundle to *every* page. Disable that and add them back, per
+# page, only on the notebooks that contain widgets (see add_notebook_widget_scripts).
+nbsphinx_requirejs_path = ""
+nbsphinx_widgets_path = ""
+
 intersphinx_mapping = {
     "sphinx": ("https://www.sphinx-doc.org/en/master", None),
     # Sphinx treats typing.* as reftype = 'obj' but pyupgrade moved
@@ -362,6 +368,24 @@ def setup_to_main(
     context["to_main"] = to_main
 
 
+def add_notebook_widget_scripts(
+    app: Sphinx, pagename: str, templatename: str, context, doctree
+) -> None:
+    """Load the widget scripts only on the notebook pages that contain widgets.
+
+    ``add_js_file`` called from ``html-page-context`` only affects the page being written.
+    """
+    if pagename not in app.env.nbsphinx_widgets:
+        return
+    from ipywidgets.embed import DEFAULT_EMBED_REQUIREJS_URL
+
+    app.add_js_file(
+        "https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js",
+        **app.config.nbsphinx_requirejs_options,
+    )
+    app.add_js_file(DEFAULT_EMBED_REQUIREJS_URL, **app.config.nbsphinx_widgets_options)
+
+
 def setup(app: Sphinx) -> dict[str, Any]:
     """Add custom configuration to sphinx app.
 
@@ -371,6 +395,7 @@ def setup(app: Sphinx) -> dict[str, Any]:
         the 2 parallel parameters set to ``True``.
     """
     app.connect("html-page-context", setup_to_main)
+    app.connect("html-page-context", add_notebook_widget_scripts)
 
     return {
         "parallel_read_safe": True,
