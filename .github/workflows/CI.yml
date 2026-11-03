@@ -32,6 +32,35 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Run the stylelint pre-commit hook. pre-commit.ci skips it because it needs
+  # the npm dependencies, whose versions are defined in package.json only.
+  stylelint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout repository 🛎"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: "Setup Python 🐍"
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # 7.0.0
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON_VERSION }}
+
+      - name: "Setup Node 🟢"
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          # major version matching tool.sphinx-theme-builder.node-version in pyproject.toml
+          node-version: "24"
+
+      - name: "Install dependencies 📦"
+        run: |
+          npm ci --ignore-scripts
+          python -Im pip install pre-commit
+
+      - name: "Run stylelint 🎨"
+        run: python -Im pre_commit run stylelint --all-files --show-diff-on-failure
+
   # Run our test suite on various combinations of OS & Python versions
   run-pytest:
     strategy:
