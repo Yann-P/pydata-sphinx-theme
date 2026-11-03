@@ -7,7 +7,6 @@ ci:
   autoupdate_schedule: monthly
   skip:
     - prettier
-    - stylelint
 
 repos:
   - repo: "https://github.com/astral-sh/ruff-pre-commit"
@@ -53,11 +52,18 @@ repos:
         types_or: [json, ts, tsx, javascript, jsx, css, scss]
         exclude: .+\.html|webpack\.config\.js|tests/test_a11y/|\.ipynb$
 
+      # self-contained (not `system`) so it also runs on pre-commit.ci
+      # keep versions in sync with package-lock.json
       - id: stylelint
         name: stylelint
-        entry: 'npm run stylelint:files'
-        language: system
+        entry: stylelint --fix
+        language: node
         types: [scss]
+        additional_dependencies:
+          - stylelint@16.26.1
+          - stylelint-config-standard-scss@16.0.0
+          - stylelint-prettier@4.1.0
+          - prettier@3.8.3
 
   - repo: "https://github.com/pre-commit/pre-commit-hooks"
     rev: v6.0.0
