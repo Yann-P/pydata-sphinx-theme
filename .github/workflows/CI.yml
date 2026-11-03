@@ -32,6 +32,27 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Lint our SCSS with stylelint (skipped by pre-commit.ci as it needs npm)
+  stylelint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout repository 🛎"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: "Setup Node 🟢"
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          # major version matching tool.sphinx-theme-builder.node-version in pyproject.toml
+          node-version: "24"
+
+      - name: "Install npm dependencies 📦"
+        run: npm ci --ignore-scripts
+
+      - name: "Run stylelint 🎨"
+        run: npm run stylelint:check
+
   # Run our test suite on various combinations of OS & Python versions
   run-pytest:
     strategy:
